@@ -1,17 +1,28 @@
 <?php
 class TokenGenerator {
-  private $userName = '282749445@qq.com';
-  private $passwd = '1fb4GW';
+  private $userName; 
+  private $passwd; 
 
-  private $appId = '264209280313575';
-  private $appSecret = 'f52ed5d2409780bbaf02cedfae6a8542';
-  private $siteUrl = 'http://localhost:3080';
+  private $appId; 
+  private $appSecret; 
+  private $siteUrl; 
+
   private $userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0';
 
   private $curlVerbose = false;
 
   public static $headerLoc = "temp/curl.httpheaders";
   public static $cookieLoc = "temp/curl.cookies";
+
+  public function initConfig($configFile) {
+    $fileContents = file_get_contents($configFile);
+	$infoArr = json_decode($fileContents, true);
+	is_array($infoArr) or die("Invalid config file format\n");
+    
+	foreach ($infoArr as $key => $value) {
+	  $this->$key = $value;
+	}
+  }
 
   // example: https://www.facebook.com/dialog/oauth?client_id=264209280313575&redirect_uri=http://localhost:3080/ignores/show-request.php&scope=email&response_type=token
   // need extra options to access this url because of server side browser detection and redirection.
@@ -133,6 +144,7 @@ class TokenGenerator {
   }
 
   public function entry() {
+    $this->initConfig('config/credentials');
     $redirectUrl = $this->siteUrl . '/redirect';
 	$scopes = array(
 	  'email', 
