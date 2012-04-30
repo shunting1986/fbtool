@@ -1,7 +1,9 @@
 #!/usr/bin/env php
 <?php
-require_once 'Main.php';
+require_once 'TokenGenerator.php';
+require_once 'HTMLParser.php';
 
-$obj = new Main;
+// $obj = new HTMLParser;
+$obj = new TokenGenerator;
 $obj->entry();
 ?>
