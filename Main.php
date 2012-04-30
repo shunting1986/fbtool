@@ -6,8 +6,7 @@ class Main {
   private $appId = '264209280313575';
   private $appSecret = 'f52ed5d2409780bbaf02cedfae6a8542';
   private $siteUrl = 'http://localhost:3080';
-
-  private $userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0';
+private $userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0';
 
   // example: https://www.facebook.com/dialog/oauth?client_id=264209280313575&redirect_uri=http://localhost:3080/ignores/show-request.php&scope=email&response_type=token
   // need extra options to access this url because of server side browser detection and redirection.
@@ -34,6 +33,7 @@ class Main {
 	  CURLOPT_FOLLOWLOCATION => true,
 	  CURLOPT_USERAGENT => $this->userAgent,
 	  CURLOPT_FOLLOWLOCATION => true,
+	  CURLOPT_SSL_VERIFYPEER => false,
 	  CURLOPT_HTTPHEADER => array(
 	    'Accept-Language: en-us,en;q=0.5', // solve the chinese problem
 	  ),
