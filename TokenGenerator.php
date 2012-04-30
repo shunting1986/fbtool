@@ -7,13 +7,6 @@ class TokenGenerator {
   private $appSecret; 
   private $siteUrl; 
 
-  private $userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0';
-
-  private $curlVerbose = false;
-
-  public static $headerLoc = "temp/curl.httpheaders";
-  public static $cookieLoc = "temp/curl.cookies";
-
   public function initConfig($configFile) {
     $fileContents = file_get_contents($configFile);
 	$infoArr = json_decode($fileContents, true);
@@ -40,40 +33,6 @@ class TokenGenerator {
 	return $baseUrl . '?' . implode('&', $params);
   }
 
-  public function fetchPage($url, $postData = null) {
-    $handle = curl_init($url); 
-	$handle !== false or die('Fail to invoke curl_init');
-
-    $fh = fopen(self::$headerLoc, "w");
-	$fh !== false or die('Fail to open the file to store http headers');
-	$options = array(
-	  CURLOPT_RETURNTRANSFER => true,
-	  CURLOPT_FOLLOWLOCATION => true,
-	  CURLOPT_USERAGENT => $this->userAgent,
-	  CURLOPT_FOLLOWLOCATION => true,
-	  CURLOPT_SSL_VERIFYPEER => false,
-	  CURLOPT_WRITEHEADER => $fh,
-	  CURLOPT_HTTPHEADER => array(
-	    'Accept-Language: en-us,en;q=0.5', // solve the chinese problem
-	  ),
-	  CURLOPT_COOKIEJAR => self::$cookieLoc,
-	  CURLOPT_COOKIEFILE => self::$cookieLoc,
-	  CURLOPT_VERBOSE => $this->curlVerbose,
-	);
-
-	if (is_array($postData)) {
-	  $options[CURLOPT_POST] = true;
-	  $options[CURLOPT_POSTFIELDS] = $postData;
-	}
-
-	curl_setopt_array($handle, $options) !== false or die('Fail to invoke curl_setopt_array');
-	$response = curl_exec($handle);
-	$response !== false or die('Fail to invoke curl_exec, error message is ' . curl_error($handle) . "\n");
-	curl_close($handle);
-	fclose($fh) or die('Fail to close the file that stores http headers');
-	return $response;
-  }
-
   private function loginFacebook($parser) {
     $loginInfo = $parser->getLoginInfo();
 	$url = $loginInfo[0];
@@ -82,7 +41,7 @@ class TokenGenerator {
 
 	$postData['email'] = $this->userName;
 	$postData['pass'] = $this->passwd;
-	return $this->fetchPage($url, $postData);
+	return CurlWrapper::fetchPage($url, $postData);
   }
 
   private function isGrantPage($htmlStr) {
@@ -109,7 +68,7 @@ class TokenGenerator {
 
   public function obtainToken($appId, $redirectUrl, $scopes) {
     $url = $this->genClientTokenFetchUrl($appId, $redirectUrl, $scopes);
-	$response = $this->fetchPage($url);
+	$response = CurlWrapper::fetchPage($url);
 
 	$parser = new HTMLParser;
 	$parser->loadStr($response);
@@ -133,7 +92,7 @@ class TokenGenerator {
 	  is_array($postData) or die("No post data\n");
 	  unset($postData['cancel_clicked']);
 
-	  $response = $this->fetchPage($url, $postData);
+	  $response = CurlWrapper::fetchPage($url, $postData);
 	}
 
     // if we reach here, we have already granted the app.
