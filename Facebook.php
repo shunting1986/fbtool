@@ -33,6 +33,35 @@ class Facebook {
 	count($nextPageDecoded['data']) == 0 or die("Next page is not empty\n");
 	return $decoded['data'];
   }
+  
+  public function getGraphApiVictims($token) {
+    $friendlistId = '230022850437022';
+	$decoded = $this->graph("$friendlistId/members", $token);
+	// TODO handle paging
+	return $decoded['data'];
+  }
+
+  public function getAllEvents($token) {
+    $decoded = $this->graph('me/events', $token);
+	// TODO should we consider paging here?
+	return $decoded['data'];
+  }
+
+  public function pickOneLuckyEvent($token) {
+    $events = $this->getAllEvents($token);
+	$luckydog = $events[0];
+	return $luckydog['id'];
+  }
+
+  public function getEventProfile($eventId, $token) {
+    return $this->graph("$eventId", $token);
+  }
+
+  public function getAllEventGuests($eventId, $token) {
+    $decoded = $this->graph("$eventId/invited", $token);
+	// TODO process paging
+	return $decoded['data'];
+  }
 
   public function getFriendPicture($id, $token) {
     $pic = $this->graph("$id/picture", $token, true);
@@ -72,14 +101,15 @@ class Facebook {
 	  $token = $tokenInfo['access_token'];
 	}
 
-	var_dump($this->graph('me/permissions', $token));
-	exit;
-
+	// var_dump($this->graph('me/permissions', $token));
 	// echo CurlWrapper::fetchPage("https://graph.facebook.com/me?access_token=$token");
 	// var_dump($this->getFriendList($token));
 	// $this->getFriendPicture('100002822665203', $token);
 	// $this->getAllFriendPicture($token);
-	var_dump($this->createDumbEvent($token));
+	// var_dump($this->createDumbEvent($token));
+	// var_dump($this->getAllEvents($token));
+	// var_dump($this->getAllEventGuests($this->pickOneLuckyEvent($token), $token));
+	var_dump($this->getGraphApiVictims($token));
   }
 }
 ?>
