@@ -1,0 +1,7 @@
+TODO: the friend picture I fetched is hdr format, and some can not be opened.. Find out why and fix it..
+TODO: use memcache to cache the token
+TODO: event fql
+
+TODO: fix the friendlist problem
+TODO: invite people to event
+TODO: try to hit the app throttling
