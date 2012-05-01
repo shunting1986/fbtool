@@ -3,8 +3,22 @@ class Facebook {
   public static $GRAPH_API_URL = "https://graph.facebook.com";
   public static $DATA_DIR = "data";
 
-  private function graphInternal($thing, $token, $postData, $nodecode) {
+  private function params2str($params) {
+    $items = array();
+	foreach ($params as $key => $value) {
+	  $items[] = "$key=$value";
+	}
+	return implode('&', $items);
+  }
+
+  private function graphInternal($thing, $token, $postData, $nodecode, $params) {
     $url = self::$GRAPH_API_URL . "/" . $thing . "&access_token=$token";
+
+	if (is_array($params)) {
+	  $paramStr = $this->params2str($params);
+	  $url .= "&$paramStr";
+	}
+
 	$json = CurlWrapper::fetchPage($url, $postData);
 
 	if (!$nodecode) {
@@ -16,12 +30,16 @@ class Facebook {
 	return $decoded;
   }
 
+  public function graphParam($thing, $params, $postData, $token, $nodecode = false) {
+    return $this->graphInternal($thing, $token, $postData, $nodecode, $params);
+  }
+
   public function graph($thing, $token, $nodecode = false) {
-    return $this->graphInternal($thing, $token, null, $nodecode);
+    return $this->graphInternal($thing, $token, null, $nodecode, null);
   }
 
   public function graphPost($thing, $token, $postData, $nodecode = false) {
-    return $this->graphInternal($thing, $token, $postData, $nodecode);
+    return $this->graphInternal($thing, $token, $postData, $nodecode, null);
   }
 
   public function getFriendList($token) {
@@ -83,8 +101,23 @@ class Facebook {
     return $this->graphPost('me/events', $token, $eventInfo);
   }
 
-  public function eventInvite($eventId, $guestId, $token) {
-    die("eventInvite not implemented\n"); // TODO
+  public function eventInvite($eventId, $guests, $token) {
+    is_array($guests) && count($guests) >= 1 or die("Invalid guests argument for eventInvite function\n");
+	$paramArr = array(
+	  'users' => implode(',', $guests),
+	);
+	$this->graphParam("$eventId/invited", $paramArr, array(), $token) or die("Fail to invite guests..\n");
+	return true;
+  }
+
+  public function inviteAllVictims($eventId, $token) {
+    $victims = $this->getGraphApiVictims($token);
+	$guests = array();
+	foreach ($victims as $oneVictim) {
+	  $guests[] = $oneVictim['id'];
+	}
+	$this->eventInvite($eventId, $guests, $token);
+	return true;
   }
 
   // for illustration purpose
@@ -112,9 +145,9 @@ class Facebook {
 	// $this->getAllFriendPicture($token);
 	// var_dump($this->createDumbEvent($token));
 	// var_dump($this->getAllEvents($token));
-	// var_dump($this->getAllEventGuests($this->pickOneLuckyEvent($token), $token));
+	var_dump($this->getAllEventGuests('269618983134319', $token));
 	// var_dump($this->getGraphApiVictims($token)); // cheng yuan: 100002760144965
-	$this->eventInvite(269618983134319, 100002760144965, $token);
+	// var_dump($this->inviteAllVictims('269618983134319', $token));
   }
 }
 ?>
