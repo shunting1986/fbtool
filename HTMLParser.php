@@ -38,7 +38,15 @@ class HTMLParser {
 
     $postData = array();
 	foreach ($form->find('input') as $input) {
-	  $postData[$input->attr['name']] = $input->attr['value'];
+	  $name = @$input->attr['name'];
+	  $value = @$input->attr['value'];
+	  if (!isset($name)) {
+	    continue;
+	  } 
+	  if (!isset($value)) {
+	    $value = '';
+      }
+	  $postData[$name] = $value;
 	}
 	return array($actionPage, $postData);
   }

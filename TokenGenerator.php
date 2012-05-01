@@ -17,7 +17,7 @@ class TokenGenerator {
 	}
   }
 
-  // example: https://www.facebook.com/dialog/oauth?client_id=264209280313575&redirect_uri=http://localhost:3080/ignores/show-request.php&scope=email&response_type=token
+  // example: https://www.facebook.com/dialog/oauth?client_id=264209280313575&redirect_uri=http://localhost:3080/ignores/show-request.php&scope=email,create_event&response_type=token
   // need extra options to access this url because of server side browser detection and redirection.
   // A workable url is:
   //   curl -k -H 'Accept-Language: en-us,en;q=0.5' -L -A 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0' <this url>
@@ -44,13 +44,19 @@ class TokenGenerator {
 	return CurlWrapper::fetchPage($url, $postData);
   }
 
-  private function isGrantPage($htmlStr) {
+  private function isGotoAppPage($htmlStr) {
     return preg_match('/Go to App/', $htmlStr);
+  }
+
+  private function isAllowPage($htmlStr) {
+    return preg_match('/would (also )?like permission to/', $htmlStr)
+	  && preg_match('/Allow/', $htmlStr)
+	  && preg_match('/Skip/', $htmlStr);
   }
 
   private function parseGoAgentErrorPage($htmlStr) {
     $matches = array();
-    preg_match("/<p>GET '([^']*)'<\/p>/", $htmlStr, $matches) or die("Invalid GoAgent error page\n");
+    preg_match("/<p>GET '([^']*)'<\/p>/", $htmlStr, $matches) or die("Invalid GoAgent error page: " . $htmlStr . "\n");
 	$url = $matches[1];
 	preg_match("/#(.*)/", $url, $matches) or die("Invalid redirect url\n");
 	$paramStr = $matches[1];
@@ -66,6 +72,29 @@ class TokenGenerator {
 	return $info;
   }
 
+  private function commitFormAllow($parser, $allowValue, $cancelNameArr, $verbose = false) {
+    $inputArr = $parser->find('input[value=' . $allowValue . ']');
+	count($inputArr) == 1 or die("the number of input tag with value 'Go to App' is not exactly one\n");
+	$form = $parser->getAncestor($inputArr[0], 'form');
+	!is_null($form) or die("Can not found the surrounding form");
+
+	$formInfo = $parser->parseForm($form);
+	$url = $formInfo[0];
+	$postData = $formInfo[1];
+	is_array($postData) or die("No post data\n");
+
+	foreach ($cancelNameArr as $cancelName) {
+	  unset($postData[$cancelName]);
+	}
+
+	if ($verbose) {
+	  echo "= commitFormAllow, url = $url\nPost data is:\n";
+	  var_dump($postData);
+	}
+	$response = CurlWrapper::fetchPage($url, $postData);
+    return $response;
+  }
+
   public function obtainToken($appId, $redirectUrl, $scopes) {
     $url = $this->genClientTokenFetchUrl($appId, $redirectUrl, $scopes);
 	$response = CurlWrapper::fetchPage($url);
@@ -78,38 +107,39 @@ class TokenGenerator {
 	  return $this->obtainToken($appId, $redirectUrl, $scopes); // we have login, and try again
 	}
 
-	if ($this->isGrantPage($response)) { 
+	if ($this->isGotoAppPage($response)) {  // first time see this app
 	  // grant
 	  $parser->loadStr($response);
-      $inputArr = $parser->find('input[value=Go to App]');
-	  count($inputArr) == 1 or die("the number of input tag with value 'Go to App' is not exactly one\n");
-	  $form = $parser->getAncestor($inputArr[0], 'form');
-	  !is_null($form) or die("Can not found the surrounding form");
+      $response = $this->commitFormAllow($parser, 'Go to App', array('cancel_clicked'));
+	}
 
-	  $formInfo = $parser->parseForm($form);
-	  $url = $formInfo[0];
-	  $postData = $formInfo[1];
-	  is_array($postData) or die("No post data\n");
-	  unset($postData['cancel_clicked']);
-
-	  $response = CurlWrapper::fetchPage($url, $postData);
+	if ($this->isAllowPage($response)) { // this app requires more permissions
+	  $parser->loadStr($response);
+	  // $response = $this->commitFormAllow($parser, 'Allow', 'skip_clicked', true);
+	  $response = $this->commitFormAllow($parser, 'Allow', array('cancel_clicked', 'skip_clicked'), true); 
 	}
 
     // if we reach here, we have already granted the app.
 	// because we are using goagent, the proxy will return a error page, which contains the url that 
 	// contains the token
     $tokenInfo = $this->parseGoAgentErrorPage($response);
-	return $tokenInfo['access_token'];
+	return $tokenInfo;
   }
 
-  public function entry() {
+  public function obtainTokenWrapper() {
     $this->initConfig('config/credentials');
     $redirectUrl = $this->siteUrl . '/redirect';
 	$scopes = array(
 	  'email', 
 	  'user_events',
+	  'create_event',
 	);
-    echo $this->obtainToken($this->appId, $redirectUrl, $scopes) . "\n";
+    return $this->obtainToken($this->appId, $redirectUrl, $scopes);
+  }
+
+  public function entry() {
+    $tokenInfo = $this->obtainTokenWrapper();
+	echo $tokenInfo['access_token'];
   }
 }
 ?>

@@ -3,9 +3,9 @@ class Facebook {
   public static $GRAPH_API_URL = "https://graph.facebook.com";
   public static $DATA_DIR = "data";
 
-  public function graph($thing, $token, $nodecode = false) {
+  private function graphInternal($thing, $token, $postData, $nodecode) {
     $url = self::$GRAPH_API_URL . "/" . $thing . "&access_token=$token";
-	$json = CurlWrapper::fetchPage($url);
+	$json = CurlWrapper::fetchPage($url, $postData);
 
 	if (!$nodecode) {
 	  $decoded = json_decode($json, true);
@@ -14,6 +14,14 @@ class Facebook {
 	  $decoded = $json;
 	}
 	return $decoded;
+  }
+
+  public function graph($thing, $token, $nodecode = false) {
+    return $this->graphInternal($thing, $token, null, $nodecode);
+  }
+
+  public function graphPost($thing, $token, $postData, $nodecode = false) {
+    return $this->graphInternal($thing, $token, $postData, $nodecode);
   }
 
   public function getFriendList($token) {
@@ -42,12 +50,36 @@ class Facebook {
 	}
   }
 
+  public function createEvent($eventInfo, $token) {
+    return $this->graphPost('me/events', $token, $eventInfo);
+  }
+
+  // for illustration purpose
+  public function createDumbEvent($token) {
+    return $this->createEvent(array(
+	  'name' => 'createDumbEvent',
+	  'start_time' => '2012-12-20 09:09:09+08:00'
+	), $token);
+  }
+
   public function entry() {
-    $token = 'AAADwTARMqOcBAE3ZCMN8K9i0pxAEWHrCdbg6RxwZCO5fYNowmOCKZBqo1W9TC3EzQO82hEu9ppg8v1j0ZBOtnExXkjAOZCuMIjsJjs2OsqHARZAGvY1jLx';
-	// echo CurlWrapper::fetchPage("https://graph.facebook.com/me/friends?access_token=$token");
+    $token = 'AAADwTARMqOcBAA1PegXtbZBsmfXDVZCPXZAuQ1HYZCFEqFZCYJZBZAPLKgNkBhmgs5SfERmsY2sOndNV68FAO3xwuW52WF7lQu54Y3n20mOpjY4B9QLYQHY';
+	$me = $this->graph('me', $token);
+	if (isset($me['error'])) { 
+	  $tokenGen = new TokenGenerator;
+	  $tokenInfo = $tokenGen->obtainTokenWrapper();
+	  var_dump($tokenInfo);
+	  $token = $tokenInfo['access_token'];
+	}
+
+	var_dump($this->graph('me/permissions', $token));
+	exit;
+
+	// echo CurlWrapper::fetchPage("https://graph.facebook.com/me?access_token=$token");
 	// var_dump($this->getFriendList($token));
 	// $this->getFriendPicture('100002822665203', $token);
-	$this->getAllFriendPicture($token);
+	// $this->getAllFriendPicture($token);
+	var_dump($this->createDumbEvent($token));
   }
 }
 ?>
