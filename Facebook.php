@@ -11,6 +11,7 @@ class Facebook {
 	return implode('&', $items);
   }
 
+  private $lastURL;
   private function graphInternal($thing, $token, $postData, $nodecode, $params) {
     $url = self::$GRAPH_API_URL . "/" . $thing . "&access_token=$token";
 
@@ -19,6 +20,7 @@ class Facebook {
 	  $url .= "&$paramStr";
 	}
 
+	$this->lastURL = $url;
 	$json = CurlWrapper::fetchPage($url, $postData);
 
 	if (!$nodecode) {
@@ -98,7 +100,10 @@ class Facebook {
   }
 
   public function createEvent($eventInfo, $token) {
-    return $this->graphPost('me/events', $token, $eventInfo);
+    // return format { "id": <id> }
+    $decoded = $this->graphPost('me/events', $token, $eventInfo);
+	isset($decoded['id']) or die ("Create event failed, reponse is: " . json_encode($decoded) . "\n");
+	return $decoded;
   }
 
   public function eventInvite($eventId, $guests, $token) {
@@ -128,6 +133,29 @@ class Facebook {
 	), $token);
   }
 
+  public function createMultipleEvent($namePrefix, $num, $token) {
+    for ($i = 0; $i < $num; ++$i) {
+	  $name = $namePrefix . " - $i";
+	  echo "= create event $name\n";
+	  $this->createEvent(array(
+	    'name' => $name,
+		'start_time' => '2012-12-20 09:09:09+08:00',
+      ), $token);
+	}
+  }
+
+  public function getUserProfileMultipleTimes($num, $token) {
+    for ($i = 0; $i < $num; ++$i) {
+	  echo "= Request $i\n";
+      $decoded = $this->graph("me", $token);	  
+      if (isset($decoded['id'])) {
+	    echo "    name is " . $decoded['name'] . "\n";
+	  } else {
+	    echo ('    Fail to fetch user profile, the response is: ' . json_encode($decoded) . "\n" . "Last url is: " . $this->lastURL . "\n");
+	  }
+	}
+  }
+
   public function postMessageToEventWall($eventId, $message, $token) {
     // the return format is { "id": <id> }
     return $this->graphPost("$eventId/feed", $token, array("message" => $message));
@@ -143,8 +171,8 @@ class Facebook {
 	  $token = $tokenInfo['access_token'];
 	}
 
+	// var_dump($this->graph('me', $token));
 	// var_dump($this->graph('me/permissions', $token));
-	// echo CurlWrapper::fetchPage("https://graph.facebook.com/me?access_token=$token");
 	// var_dump($this->getFriendList($token));
 	// $this->getFriendPicture('100002822665203', $token);
 	// $this->getAllFriendPicture($token);
@@ -153,8 +181,10 @@ class Facebook {
 	// var_dump($this->getAllEventGuests('269618983134319', $token));
 	// var_dump($this->getGraphApiVictims($token)); // cheng yuan: 100002760144965
 	// var_dump($this->inviteAllVictims('269618983134319', $token));
+	// var_dump($this->postMessageToEventWall('269618983134319', "Hello everyone", $token));
+	// $this->createMultipleEvent("HugeBatch", 100, $token);
 
-	var_dump($this->postMessageToEventWall('269618983134319', "Hello everyone", $token));
+	$this->getUserProfileMultipleTimes(10000, $token);
   }
 }
 ?>
