@@ -2,5 +2,5 @@ TODO: the friend picture I fetched is hdr format, and some can not be opened.. F
 TODO: use memcache to cache the token
 TODO: event fql
 
-TODO: post to the event wall..
-TODO: try to hit the app throttling
+TODO: understand insights...
+TODO: try to hit the app throttling by a well-defined calling process

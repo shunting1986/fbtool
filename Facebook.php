@@ -128,8 +128,13 @@ class Facebook {
 	), $token);
   }
 
+  public function postMessageToEventWall($eventId, $message, $token) {
+    // the return format is { "id": <id> }
+    return $this->graphPost("$eventId/feed", $token, array("message" => $message));
+  }
+
   public function entry() {
-    $token = 'AAADwTARMqOcBADXzIl6gGwLVlWtNVOonPKFnGTSGdZBSDLZB6GiSnGmiLcXBRCZCGDVIZBrmj5Iaembtp9CDzqZASzYQvWKGT91sX8QZCdyiz9Pfgq3cVa';
+    $token = 'AAADwTARMqOcBAC220zZBMhPuuLN84Ps5Ggtw9sBQ4MKFFIZBwjunZBQhtyxjM7VZCA5a9TwD1sjgofwtF4Wyt1RIigUBshBSNoX8tEPlEhMllBQ5qXZA7';
 	$me = $this->graph('me', $token);
 	if (isset($me['error'])) { 
 	  $tokenGen = new TokenGenerator;
@@ -145,9 +150,11 @@ class Facebook {
 	// $this->getAllFriendPicture($token);
 	// var_dump($this->createDumbEvent($token));
 	// var_dump($this->getAllEvents($token));
-	var_dump($this->getAllEventGuests('269618983134319', $token));
+	// var_dump($this->getAllEventGuests('269618983134319', $token));
 	// var_dump($this->getGraphApiVictims($token)); // cheng yuan: 100002760144965
 	// var_dump($this->inviteAllVictims('269618983134319', $token));
+
+	var_dump($this->postMessageToEventWall('269618983134319', "Hello everyone", $token));
   }
 }
 ?>

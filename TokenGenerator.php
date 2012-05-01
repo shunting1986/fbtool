@@ -134,6 +134,7 @@ class TokenGenerator {
 	  'user_events',
 	  'create_event',
 	  'read_friendlists',
+	  'publish_stream',
 	);
     return $this->obtainToken($this->appId, $redirectUrl, $scopes);
   }
