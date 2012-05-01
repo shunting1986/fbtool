@@ -83,6 +83,10 @@ class Facebook {
     return $this->graphPost('me/events', $token, $eventInfo);
   }
 
+  public function eventInvite($eventId, $guestId, $token) {
+    die("eventInvite not implemented\n"); // TODO
+  }
+
   // for illustration purpose
   public function createDumbEvent($token) {
     return $this->createEvent(array(
@@ -92,7 +96,7 @@ class Facebook {
   }
 
   public function entry() {
-    $token = 'AAADwTARMqOcBAA1PegXtbZBsmfXDVZCPXZAuQ1HYZCFEqFZCYJZBZAPLKgNkBhmgs5SfERmsY2sOndNV68FAO3xwuW52WF7lQu54Y3n20mOpjY4B9QLYQHY';
+    $token = 'AAADwTARMqOcBADXzIl6gGwLVlWtNVOonPKFnGTSGdZBSDLZB6GiSnGmiLcXBRCZCGDVIZBrmj5Iaembtp9CDzqZASzYQvWKGT91sX8QZCdyiz9Pfgq3cVa';
 	$me = $this->graph('me', $token);
 	if (isset($me['error'])) { 
 	  $tokenGen = new TokenGenerator;
@@ -109,7 +113,8 @@ class Facebook {
 	// var_dump($this->createDumbEvent($token));
 	// var_dump($this->getAllEvents($token));
 	// var_dump($this->getAllEventGuests($this->pickOneLuckyEvent($token), $token));
-	var_dump($this->getGraphApiVictims($token));
+	// var_dump($this->getGraphApiVictims($token)); // cheng yuan: 100002760144965
+	$this->eventInvite(269618983134319, 100002760144965, $token);
   }
 }
 ?>

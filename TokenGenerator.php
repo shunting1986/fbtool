@@ -116,7 +116,7 @@ class TokenGenerator {
 	if ($this->isAllowPage($response)) { // this app requires more permissions
 	  $parser->loadStr($response);
 	  // $response = $this->commitFormAllow($parser, 'Allow', 'skip_clicked', true);
-	  $response = $this->commitFormAllow($parser, 'Allow', array('cancel_clicked', 'skip_clicked'), true); 
+	  $response = $this->commitFormAllow($parser, 'Allow', array('cancel_clicked', 'skip_clicked'), false); 
 	}
 
     // if we reach here, we have already granted the app.
@@ -133,6 +133,7 @@ class TokenGenerator {
 	  'email', 
 	  'user_events',
 	  'create_event',
+	  'read_friendlists',
 	);
     return $this->obtainToken($this->appId, $redirectUrl, $scopes);
   }
