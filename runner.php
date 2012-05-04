@@ -6,7 +6,7 @@ require_once 'CurlWrapper.php';
 require_once 'Facebook.php';
 
 // $obj = new HTMLParser;
-// $obj = new TokenGenerator;
-$obj = new Facebook;
+$obj = new TokenGenerator;
+# $obj = new Facebook;
 $obj->entry();
 ?>
