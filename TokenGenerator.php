@@ -54,10 +54,7 @@ class TokenGenerator {
 	  && preg_match('/Skip/', $htmlStr);
   }
 
-  private function parseGoAgentErrorPage($htmlStr) {
-    $matches = array();
-    preg_match("/<p>GET '([^']*)'<\/p>/", $htmlStr, $matches) or die("Invalid GoAgent error page: " . $htmlStr . "\n");
-	$url = $matches[1];
+  private function parseTokenInfoFromUrl($url) {
 	preg_match("/#(.*)/", $url, $matches) or die("Invalid redirect url\n");
 	$paramStr = $matches[1];
 
@@ -70,6 +67,25 @@ class TokenGenerator {
 
 	// the info array usually contains 2 elements: access_token, expires_in
 	return $info;
+  }
+
+  private function parseGoAgentErrorPage($htmlStr) {
+    $matches = array();
+    preg_match("/<p>GET '([^']*)'<\/p>/", $htmlStr, $matches) or die("Invalid GoAgent error page: " . $htmlStr . "\n");
+	$url = $matches[1];
+
+	return $this->parseTokenInfoFromUrl($url);
+  }
+
+  private function parseCurlLogFile($redirectUrl, $filename) {
+    $fcont = file_get_contents($filename);
+	$fcont !== false or die("Fail to read the curl log file\n");
+	$matches = array();
+	if (preg_match("!> GET ($redirectUrl.*#.*access_token=.*) HTTP.1[.][01]!", $fcont, $matches)) {
+	  return $this->parseTokenInfoFromUrl($matches[1]);
+	} else {
+	  die("The curl log file does not contains the access token\n");
+	}
   }
 
   private function commitFormAllow($parser, $allowValue, $cancelNameArr, $verbose = false) {
@@ -113,7 +129,7 @@ class TokenGenerator {
       $response = $this->commitFormAllow($parser, 'Go to App', array('cancel_clicked'));
 	}
 
-	if ($this->isAllowPage($response)) { // this app requires more permissions
+	if ($this->isAllowPage($response)) { // this app requires more permissions 
 	  $parser->loadStr($response);
 	  // $response = $this->commitFormAllow($parser, 'Allow', 'skip_clicked', true);
 	  $response = $this->commitFormAllow($parser, 'Allow', array('cancel_clicked', 'skip_clicked'), false); 
@@ -122,12 +138,18 @@ class TokenGenerator {
     // if we reach here, we have already granted the app.
 	// because we are using goagent, the proxy will return a error page, which contains the url that 
 	// contains the token
-    $tokenInfo = $this->parseGoAgentErrorPage($response);
+
+    # // the proxy is goagent and the site url is unreachable
+    # $tokenInfo = $this->parseGoAgentErrorPage($response);
+	#
+	$tokenInfo = $this->parseCurlLogFile($redirectUrl, CurlWrapper::$stderrFile);
+    
+	# echo "Final resp is: $response\n";
 	return $tokenInfo;
   }
 
   public function obtainTokenWrapper() {
-    $this->initConfig('config/credentials');
+    $this->initConfig('config/config');
     $redirectUrl = $this->siteUrl . '/redirect';
 	$scopes = array(
 	  'email', 
@@ -141,7 +163,7 @@ class TokenGenerator {
 
   public function entry() {
     $tokenInfo = $this->obtainTokenWrapper();
-	echo $tokenInfo['access_token'];
+	echo $tokenInfo['access_token'] . "\n";
   }
 }
 ?>
