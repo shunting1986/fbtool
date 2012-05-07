@@ -7,6 +7,8 @@ class TokenGenerator {
   private $appSecret; 
   private $siteUrl; 
 
+  private $proxy = null;
+
   public function initConfig($configFile) {
     $fileContents = file_get_contents($configFile);
 	$infoArr = json_decode($fileContents, true);
@@ -14,6 +16,11 @@ class TokenGenerator {
     
 	foreach ($infoArr as $key => $value) {
 	  $this->$key = $value;
+	}
+
+	if (!is_null($this->proxy)) {
+	  putenv("http_proxy=" . $this->proxy) or die("Fail to set http_proxy\n");
+	  putenv("https_proxy=" . $this->proxy) or die("Fail to set https_proxy\n");
 	}
   }
 
@@ -165,6 +172,7 @@ class TokenGenerator {
     if (!is_dir("temp")) { // the temp dir is needed to store the log/cookie files and so on
 	  mkdir("temp") or die("Fail to create the 'temp' dir\n");
 	}
+
     $tokenInfo = $this->obtainTokenWrapper();
 	echo $tokenInfo['access_token'] . "\n";
   }
