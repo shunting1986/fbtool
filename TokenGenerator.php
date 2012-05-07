@@ -162,6 +162,9 @@ class TokenGenerator {
   }
 
   public function entry() {
+    if (!is_dir("temp")) { // the temp dir is needed to store the log/cookie files and so on
+	  mkdir("temp") or die("Fail to create the 'temp' dir\n");
+	}
     $tokenInfo = $this->obtainTokenWrapper();
 	echo $tokenInfo['access_token'] . "\n";
   }
