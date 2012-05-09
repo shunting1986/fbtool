@@ -4,7 +4,7 @@ class TokenGenerator {
   private $passwd; 
 
   private $appId; 
-  private $appSecret; 
+  // private $appSecret; 
   private $siteUrl; 
 
   private $proxy = null;

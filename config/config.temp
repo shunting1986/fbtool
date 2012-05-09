@@ -2,7 +2,6 @@
   "userName": <user name>,
   "passwd": <password>,
   "appId": <application id>,
-  "appSecret": <application secret>,
   "siteUrl": <site url>,
   "proxy": <proxy server>
 }
