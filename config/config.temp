@@ -3,5 +3,6 @@
   "passwd": <password>,
   "appId": <application id>,
   "siteUrl": <site url>,
-  "proxy": <proxy server>
+  "proxy": <proxy server>,
+  "scopes": [<scope list in csv>]
 }

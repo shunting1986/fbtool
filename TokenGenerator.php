@@ -4,18 +4,37 @@ class TokenGenerator {
   private $passwd; 
 
   private $appId; 
-  // private $appSecret; 
   private $siteUrl; 
 
   private $proxy = null;
+
+  private $scopes;
 
   public function initConfig($configFile) {
     $fileContents = file_get_contents($configFile);
 	$infoArr = json_decode($fileContents, true);
 	is_array($infoArr) or die("Invalid config file format\n");
-    
+   
+    $validKeys = array(
+	  'userName', 'passwd', 'appId', 'siteUrl', 'proxy'
+	);
 	foreach ($infoArr as $key => $value) {
+	  if (!in_array($key, $validKeys)) {
+	    continue;
+	  }
 	  $this->$key = $value;
+	}
+
+	if (!is_array(@$infoArr['scopes'])) {
+	  $this->scopes = array( // the default
+	    'email', 
+	    'user_events',
+	    'create_event',
+	    'read_friendlists',
+	    'publish_stream',
+	  );
+	} else {
+	  $this->scopes = $infoArr['scopes'];
 	}
 
 	if (!is_null($this->proxy)) {
@@ -158,14 +177,7 @@ class TokenGenerator {
   public function obtainTokenWrapper() {
     $this->initConfig('config/config');
     $redirectUrl = $this->siteUrl . '/redirect';
-	$scopes = array(
-	  'email', 
-	  'user_events',
-	  'create_event',
-	  'read_friendlists',
-	  'publish_stream',
-	);
-    return $this->obtainToken($this->appId, $redirectUrl, $scopes);
+    return $this->obtainToken($this->appId, $redirectUrl, $this->scopes);
   }
 
   public function entry() {
